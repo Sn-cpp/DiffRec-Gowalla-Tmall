@@ -51,6 +51,7 @@ def train_model(override_args):
         lr=0.0001,
         weight_decay=0.0,
         batch_size=400,
+        infer_batch_size = 0,
         epochs=1000,
         topN='[10, 20, 50, 100]',
         tst_w_val=False,
