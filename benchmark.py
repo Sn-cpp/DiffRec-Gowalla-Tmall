@@ -185,7 +185,14 @@ def do_benchmark(override_args):
     best_test_result = None
     print("Start training...")
     print('==='*18)
-    
+
+    # Add a log recorder
+    log = {
+        'valid': [],
+        'test': []
+    }
+
+    train_time = time.time()
     for epoch in tqdm(range(1, args.epochs + 1), desc="Training"):
         if epoch - best_epoch >= 20:
             tqdm.write('-'*18)
@@ -223,6 +230,10 @@ def do_benchmark(override_args):
             else:
                 test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
 
+            # Add validation and test results to log
+            log['valid'].append((epoch, valid_results))
+            log['test'].append((epoch, valid_results))
+
             # evaluate_utils.print_results(None, valid_results, test_results)
 
             # Adjustment 7: Use the first result in the Recall@N array as selection 
@@ -239,7 +250,7 @@ def do_benchmark(override_args):
 
 
         # tqdm.write('---'*18)
-
+    train_time = time.time() - train_time
     # print('==='*18)
     print("End. Best Epoch {:03d} ".format(best_epoch))
     evaluate_utils.print_results(None, best_results, best_test_results)   
@@ -263,6 +274,7 @@ def do_benchmark(override_args):
                     args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps, args.reweight, args.log_name)
             )
         )
+    return train_time, log
 
 # Adjustment 14: Add if __name__ == "__main__" to prevent recursively import
 if __name__ == "__main__":
