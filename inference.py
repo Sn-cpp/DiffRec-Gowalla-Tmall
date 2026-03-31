@@ -45,85 +45,42 @@ def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default='yelp_clean', help='choose the dataset')
-parser.add_argument('--data_path', type=str, default='./datasets/', help='load data path')
-parser.add_argument('--batch_size', type=int, default=400)
-parser.add_argument('--topN', type=str, default='[10, 20, 50, 100]')
-parser.add_argument('--tst_w_val', action='store_true', help='test with validation')
-parser.add_argument('--cuda', action='store_true', help='use CUDA')
-parser.add_argument('--gpu', type=str, default='0', help='gpu card ID')
-parser.add_argument('--log_name', type=str, default='log', help='the log name')
+# Adjustment 6: Wrap into a function to run in the Jupyter Notebook 
+def infer_model(override_args):
+    default_args = argparse.Namespace(
+        dataset='yelp_clean',
+        data_path='./datasets/',
+        batch_size=400,
+        topN='[10, 20, 50, 100]',
+        tst_w_val=False, 
+        cuda=False,        
+        gpu='0',
+        log_name='log',
 
-# params for diffusion
-parser.add_argument('--mean_type', type=str, default='x0', help='MeanType for diffusion: x0, eps')
-parser.add_argument('--steps', type=int, default=100, help='diffusion steps')
-parser.add_argument('--noise_schedule', type=str, default='linear-var', help='the schedule for noise generating')
-parser.add_argument('--noise_scale', type=float, default=0.1, help='noise scale for noise generating')
-parser.add_argument('--noise_min', type=float, default=0.0001, help='noise lower bound for noise generating')
-parser.add_argument('--noise_max', type=float, default=0.02, help='noise upper bound for noise generating')
-parser.add_argument('--sampling_noise', type=bool, default=False, help='sampling with noise or not')
-parser.add_argument('--sampling_steps', type=int, default=0, help='steps of the forward process during inference')
+        # params for diffusion
+        mean_type='x0',
+        steps=100,
+        noise_schedule='linear-var',
+        noise_scale=0.1,
+        noise_min=0.0001,
+        noise_max=0.02,
+        sampling_noise=False,
+        sampling_steps=0,
 
-# Adjustment 10: Inference requires the explicit model name
-parser.add_argument ('--model_name', type=str)
+        # model
+        model_path='./checkpoints/',
+        model_name='yelp_clean.pth'
+    )
 
-args = parser.parse_args()
+    merged_args = {**vars(default_args), **vars(override_args)}
+    args = argparse.Namespace(**merged_args)
+    print("args:", args)
+    
+    args.data_path = args.data_path + args.dataset + '/'
+    
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    device = torch.device("cuda:0" if args.cuda else "cpu")
 
-args.data_path = args.data_path + args.dataset + '/'
-
-# Adjustment 13: Inference requires explicit steps and noise configs
-
-# if args.dataset == 'amazon-book_clean':
-#     args.steps = 5
-#     args.noise_scale = 0.0001
-#     args.noise_min = 0.0005
-#     args.noise_max = 0.005
-# elif args.dataset == 'yelp_clean':
-#     args.steps = 5
-#     args.noise_scale = 0.01
-#     args.noise_min = 0.001
-#     args.noise_max = 0.01
-# elif args.dataset == 'ml-1m_clean':
-#     args.steps = 40
-#     args.noise_scale = 0.005
-#     args.noise_min = 0.005
-#     args.noise_max = 0.01
-# elif args.dataset == 'amazon-book_noisy':
-#     args.steps = 10
-#     args.noise_scale = 0.005
-#     args.noise_min = 0.0001
-#     args.noise_max = 0.0005
-# elif args.dataset == 'yelp_noisy':
-#     args.steps = 5
-#     args.noise_scale = 0.001
-#     args.noise_min = 0.0005
-#     args.noise_max = 0.01
-# elif args.dataset == 'ml-1m_noisy':
-#     args.steps = 5
-#     args.noise_scale = 0.5
-#     args.noise_min = 0.001
-#     args.noise_max = 0.01
-# if args.dataset == 'gowalla':
-#     args.steps = 5
-#     args.noise_scale = 0.0001
-#     args.noise_min = 0.0005
-#     args.noise_max = 0.005
-# if args.dataset == 'tmall':
-#     args.steps = 5
-#     args.noise_scale = 0.0001
-#     args.noise_min = 0.0005
-#     args.noise_max = 0.005
-# else:
-#     raise ValueError
-
-print("args:", args)
-
-os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-device = torch.device("cuda:0" if args.cuda else "cpu")
-
-# Adjustment 6: Add __name__ == "__main__" to avoid recursively script loading
-if __name__ == "__main__":
     print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
     ### DATA LOAD ###
@@ -139,14 +96,14 @@ if __name__ == "__main__":
 
     #Adjustment 9: Disable multiprocessing in train_loader
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, pin_memory=True, shuffle=True, num_workers=0, worker_init_fn=worker_init_fn)
-    test_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False)
+    test_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=True)
 
     if args.tst_w_val:
         # Adjustment 4: Replace .A (deprecated) with .array()
         np_tv_data = np_data + torch.from_numpy(valid_y_data.toarray())
         tv_dataset = data_utils.DataDiffusion(np_tv_data)
 
-        test_twv_loader = DataLoader(tv_dataset, batch_size=args.batch_size, shuffle=False)
+        test_twv_loader = DataLoader(tv_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=True) # Add pin_memory=True
     mask_tv = train_data + valid_y_data
 
     print('data ready.')
@@ -168,7 +125,7 @@ if __name__ == "__main__":
 
     # Adjustment 11: Change the directory of checkpoints
     # model_path = "../checkpoints/DiffRec/"
-    model_path = "./checkpoints/"
+    model_path = args.model_path
     model_name = args.model_name
 
     # Adjustment 10: Inference requires the explicit model name
@@ -225,9 +182,83 @@ if __name__ == "__main__":
     else:
         test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
     evaluate_utils.print_results(None, valid_results, test_results)
+    
+    return valid_results, test_results
 
+# Adjustment 14: Add if __name__ == "__main__" to prevent recursively import
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, default='yelp_clean', help='choose the dataset')
+    parser.add_argument('--data_path', type=str, default='./datasets/', help='load data path')
+    parser.add_argument('--batch_size', type=int, default=400)
+    parser.add_argument('--topN', type=str, default='[10, 20, 50, 100]')
+    parser.add_argument('--tst_w_val', action='store_true', help='test with validation')
+    parser.add_argument('--cuda', action='store_true', help='use CUDA')
+    parser.add_argument('--gpu', type=str, default='0', help='gpu card ID')
+    parser.add_argument('--log_name', type=str, default='log', help='the log name')
 
+    # params for diffusion
+    parser.add_argument('--mean_type', type=str, default='x0', help='MeanType for diffusion: x0, eps')
+    parser.add_argument('--steps', type=int, default=100, help='diffusion steps')
+    parser.add_argument('--noise_schedule', type=str, default='linear-var', help='the schedule for noise generating')
+    parser.add_argument('--noise_scale', type=float, default=0.1, help='noise scale for noise generating')
+    parser.add_argument('--noise_min', type=float, default=0.0001, help='noise lower bound for noise generating')
+    parser.add_argument('--noise_max', type=float, default=0.02, help='noise upper bound for noise generating')
+    parser.add_argument('--sampling_noise', type=bool, default=False, help='sampling with noise or not')
+    parser.add_argument('--sampling_steps', type=int, default=0, help='steps of the forward process during inference')
 
+    # Adjustment 10: Inference requires the explicit model name
+    parser.add_argument ('--model_name', type=str, default='yelp_clean.pth', help='the .pth filename containing model state')
+
+    # Adjustment 13: Inference requires explicit steps and noise configs
+
+    # if args.dataset == 'amazon-book_clean':
+    #     args.steps = 5
+    #     args.noise_scale = 0.0001
+    #     args.noise_min = 0.0005
+    #     args.noise_max = 0.005
+    # elif args.dataset == 'yelp_clean':
+    #     args.steps = 5
+    #     args.noise_scale = 0.01
+    #     args.noise_min = 0.001
+    #     args.noise_max = 0.01
+    # elif args.dataset == 'ml-1m_clean':
+    #     args.steps = 40
+    #     args.noise_scale = 0.005
+    #     args.noise_min = 0.005
+    #     args.noise_max = 0.01
+    # elif args.dataset == 'amazon-book_noisy':
+    #     args.steps = 10
+    #     args.noise_scale = 0.005
+    #     args.noise_min = 0.0001
+    #     args.noise_max = 0.0005
+    # elif args.dataset == 'yelp_noisy':
+    #     args.steps = 5
+    #     args.noise_scale = 0.001
+    #     args.noise_min = 0.0005
+    #     args.noise_max = 0.01
+    # elif args.dataset == 'ml-1m_noisy':
+    #     args.steps = 5
+    #     args.noise_scale = 0.5
+    #     args.noise_min = 0.001
+    #     args.noise_max = 0.01
+    # if args.dataset == 'gowalla':
+    #     args.steps = 5
+    #     args.noise_scale = 0.0001
+    #     args.noise_min = 0.0005
+    #     args.noise_max = 0.005
+    # if args.dataset == 'tmall':
+    #     args.steps = 5
+    #     args.noise_scale = 0.0001
+    #     args.noise_min = 0.0005
+    #     args.noise_max = 0.005
+    # else:
+    #     raise ValueError
+
+    
+    args = parser.parse_args()
+
+    infer_model(args)
 
 
 
