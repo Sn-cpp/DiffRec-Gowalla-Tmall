@@ -83,6 +83,7 @@ def train_model(override_args):
 
     print("args:", args)
 
+    #Adjustment 16: separate test batch_size with train batch_size, increasing inference throughput
     infer_batch_size = args.batch_size if args.infer_batch_size == 0 else args.infer_batch_size
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -101,9 +102,9 @@ def train_model(override_args):
         with torch.no_grad():
             for batch_idx, batch in tqdm(enumerate(data_loader), total=len(data_loader), desc="Evaluating", leave=False):
                 # his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
-
-                his_data = mask_his[e_idxlist[batch_idx*data_loader.batch_size:batch_idx*data_loader.batch_size+len(batch)]]
+                
                 #Adjustment 16: separate test batch_size with train batch_size, increasing inference throughput
+                his_data = mask_his[e_idxlist[batch_idx*data_loader.batch_size:batch_idx*data_loader.batch_size+len(batch)]]
 
 
                 # Adjustment 5: Convert to float32 on GPU, use non_blocking
