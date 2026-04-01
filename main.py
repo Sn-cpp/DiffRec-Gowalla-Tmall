@@ -190,7 +190,9 @@ def train_model(override_args):
     print('==='*18)
 
     for epoch in tqdm(range(1, args.epochs + 1), desc="Training"):
-        if epoch - best_epoch >= 20:
+        # Adjustment 17: Extend the limit from 20 to 25
+        if epoch - best_epoch >= 25: 
+        # if epoch - best_epoch >= 20:
             tqdm.write('-'*18)
             tqdm.write('Exiting from training early')
             break
