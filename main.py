@@ -51,7 +51,7 @@ def train_model(override_args):
         lr=0.0001,
         weight_decay=0.0,
         batch_size=400,
-        infer_batch_size = 0,
+        infer_batch_size=0,
         epochs=1000,
         topN='[10, 20, 50, 100]',
         tst_w_val=False,
@@ -60,6 +60,7 @@ def train_model(override_args):
         save_path='./saved_models/',
         log_name='log',
         round=1,
+        loss_logging=True, # Adjustment 17: Add argument for loss and cost per epoch control
 
         # params for the model
         time_type='cat',
@@ -190,8 +191,7 @@ def train_model(override_args):
     print('==='*18)
 
     for epoch in tqdm(range(1, args.epochs + 1), desc="Training"):
-        # Adjustment 17: Extend the limit from 20 to 25
-        if epoch - best_epoch >= 25: 
+        if epoch - best_epoch >= 20: 
         # if epoch - best_epoch >= 20:
             tqdm.write('-'*18)
             tqdm.write('Exiting from training early')
@@ -218,10 +218,14 @@ def train_model(override_args):
             optimizer.step()
         
         # Adjustment 8: Move the evaluation results to behind the epoch results
-        tqdm.write("Runing Epoch {:03d} ".format(epoch) + 'train loss {:.4f}'.format(total_loss) + " costs " + time.strftime(
-                            "%H: %M: %S", time.gmtime(time.time()-start_time)))
-
+        if args.loss_logging:
+            tqdm.write("Runing Epoch {:03d} ".format(epoch) + 'train loss {:.4f}'.format(total_loss) + " costs " + time.strftime(
+                    "%H: %M: %S", time.gmtime(time.time()-start_time)))
+            
         if epoch % 5 == 0:
+            if not args.loss_logging:
+                tqdm.write(f"Epoch: {epoch}")
+                
             valid_results = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
             if args.tst_w_val:
                 test_results = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
@@ -242,8 +246,8 @@ def train_model(override_args):
                     .format(args.save_path, args.dataset, args.lr, args.weight_decay, args.batch_size, infer_batch_size, args.dims, args.emb_size, args.mean_type, \
                     args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps, args.reweight, args.log_name))
 
-
-        tqdm.write('---'*18)
+        if args.loss_logging or epoch % 5 == 0:
+            tqdm.write('---'*18)
 
     print('==='*18)
     print("End. Best Epoch {:03d} ".format(best_epoch))
