@@ -63,6 +63,9 @@ python -u inference.py --help
 ```
 for the list of inference arguments.
 
+# Checkpoint files
+We release the .pth files of trained models in the `DiffRec.ipynb` [here](https://drive.google.com/drive/folders/1F_CGn01zzlgART0Ko2mIbsfmk-0Ru3jt?usp=sharing)
+
 # Citation
 
 We value the work of __Wenjie Wang, Yiyan Xu, Fuli Feng, Xinyu Lin, Xiangnan He and Tat-Seng Chua__, please kindly cite their paper:
