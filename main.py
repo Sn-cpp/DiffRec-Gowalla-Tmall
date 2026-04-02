@@ -276,6 +276,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_path', type=str, default='./saved_models/', help='save model path')
     parser.add_argument('--log_name', type=str, default='log', help='the log name')
     parser.add_argument('--round', type=int, default=1, help='record the experiment')
+    parser.add_argument('--loss_logging', type=bool, default=True, help='print epoch status')
 
     # params for the model
     parser.add_argument('--time_type', type=str, default='cat', help='cat or add')

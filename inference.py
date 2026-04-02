@@ -208,7 +208,8 @@ if __name__ == "__main__":
     parser.add_argument('--sampling_steps', type=int, default=0, help='steps of the forward process during inference')
 
     # Adjustment 10: Inference requires the explicit model name
-    parser.add_argument ('--model_name', type=str, default='yelp_clean.pth', help='the .pth filename containing model state')
+    parser.add_argument('--model_path', type=str, default='./checkpoints/', help='the directory containing the model .pth file')
+    parser.add_argument('--model_name', type=str, default='yelp_clean.pth', help='the .pth filename containing model state')
 
     # Adjustment 13: Inference requires explicit steps and noise configs
 

@@ -4,26 +4,64 @@ This is a fork of YiyanXu/DiffRec repository which contains the pytorch implemen
 > 
 > Wenjie Wang, Yiyan Xu, Fuli Feng, Xinyu Lin, Xiangnan He, Tat-Seng Chua
 
-The point of this fork is to test the behavior of __DiffRec__ (base version only) on the Gowalla and Tmall datasets, in comparsion with _LightGCN_, _SimGCL_ and _LightGCL_. The datasets is provided from the [LightGCL repository](https://github.com/HKUDS/LightGCL?tab=readme-ov-file).
+The goal of this fork is to test the behavior of __DiffRec__ (base version only) on the Gowalla and Tmall datasets, in comparsion with _LightGCN_, _SimGCL_ and _LightGCL_. The datasets is provided from the [LightGCL repository](https://github.com/HKUDS/LightGCL?tab=readme-ov-file).
 
 This repository contains adjustments for the base DiffRec only, made to work on:
 + python 3.12.12
 + torch 2.9.1+cu128
 + numpy 2.4.3
++ scipy 1.17.1
 
+The code has been modernized to work with newer version of Scipy by replacing ```scipy.sparse.csr_matrix.A``` (which is deprecated) with ```scipy.sparse.csr_matrix.toarray()```.
+
+Since the two datasets are implicit, all train/validation/test sparse matrices read from files have been adjusted to ```int8``` data-type for more efficient RAM usage.
+
+Including additional performance optimizations, code refinements, and other improvements.
 # Usage
 
-__Notes__: If you are looking for the detailed arguments list, please refer to the [DiffRec repository](https://github.com/YiyanXu/DiffRec) here.
+__Notes__: Please install and activate the correct environment from `requirements.txt`.
 
-To perform training on the Gowalla dataset: run the `train_gowalla.bat`
+## To perform training, for example:
+```
+python -u main.py ^
+    --cuda ^
+    --topN="[20]" ^
+    --dataset="gowalla" ^
+    --tst_w_val ^
+    --lr=1e-4 ^
+    --weight_decay=1e-5 ^
+    --batch_size=512 ^
+    --infer_batch_size=1024 ^
+    --epochs=1000 ^
+    --dims="[1000, 1000]" ^
+    --emb_size=12 ^
+    --steps=60 ^
+    --noise_scale=0.125 ^
+    --noise_min=1e-5 ^
+    --noise_max=0.02 ^
+    --sampling_steps=0
+```
+Or use
+```
+python -u main.py --help
+```
+for the list of training arguments.
 
-To perform inference on the Gowalla dataset: run the `infer_gowalla.bat`
 
-To perform training on the Tmall dataset: run the `train_tmall.bat` 
-
-To perform inference on the Tmall dataset: run the `infer_tmall.bat`
-
-And adjust the arguments inside the `.bat` file if needed.
+## To perform inference, for example:
+```
+python -u inference.py ^
+    --cuda ^
+    --dataset="gowalla" ^
+    --topN="[20, 40]" ^
+    --model_path="./saved_models/" ^
+    --model_name="your_model_name.pth"    
+```
+Or use
+```
+python -u inference.py --help
+```
+for the list of inference arguments.
 
 # Citation
 
