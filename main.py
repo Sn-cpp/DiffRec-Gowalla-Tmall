@@ -31,20 +31,22 @@ import data_utils
 from copy import deepcopy
 
 import random
-random_seed = 1
-torch.manual_seed(random_seed) # cpu
-torch.cuda.manual_seed(random_seed) # gpu
-np.random.seed(random_seed) # numpy
-random.seed(random_seed) # random and transforms
-torch.backends.cudnn.deterministic=True # cudnn
-def worker_init_fn(worker_id):
-    np.random.seed(random_seed + worker_id)
-def seed_worker(worker_id):
-    worker_seed = torch.initial_seed() % 2**32
-    np.random.seed(worker_seed)
 
 # Adjustment 6: Wrap into a function to run in the Jupyter Notebook 
 def train_model(override_args):
+    random_seed = 1
+    torch.manual_seed(random_seed) # cpu
+    torch.cuda.manual_seed(random_seed) # gpu
+    np.random.seed(random_seed) # numpy
+    random.seed(random_seed) # random and transforms
+    torch.backends.cudnn.deterministic=True # cudnn
+    def worker_init_fn(worker_id):
+        np.random.seed(random_seed + worker_id)
+    def seed_worker(worker_id):
+        worker_seed = torch.initial_seed() % 2**32
+        np.random.seed(worker_seed)
+
+
     default_args = argparse.Namespace(
         dataset='yelp_clean',
         data_path='./datasets/',
@@ -116,8 +118,8 @@ def train_model(override_args):
                 prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
                 prediction[his_data.nonzero()] = -np.inf
 
-                # Adjustment 7: Use the first result in the Recall@N array as selection 
-                _, indices = torch.topk(prediction, topN[0])
+
+                _, indices = torch.topk(prediction, topN[-1])
                 
                 indices = indices.cpu().numpy().tolist()
                 predict_items.extend(indices)
@@ -175,7 +177,7 @@ def train_model(override_args):
     model = DNN(in_dims, out_dims, args.emb_size, time_type="cat", norm=args.norm).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    print("models ready.")
+    print("model ready.")
 
     param_num = 0
     mlp_num = sum([param.nelement() for param in model.parameters()])

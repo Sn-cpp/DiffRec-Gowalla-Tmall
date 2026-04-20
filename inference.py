@@ -33,20 +33,24 @@ import data_utils
 from copy import deepcopy
 
 import random
-random_seed = 1
-torch.manual_seed(random_seed) # cpu
-torch.cuda.manual_seed(random_seed) # gpu
-np.random.seed(random_seed) # numpy
-random.seed(random_seed) # random and transforms
-torch.backends.cudnn.deterministic=True # cudnn
-def worker_init_fn(worker_id):
-    np.random.seed(random_seed + worker_id)
-def seed_worker(worker_id):
-    worker_seed = torch.initial_seed() % 2**32
-    np.random.seed(worker_seed)
+
 
 # Adjustment 6: Wrap into a function to run in the Jupyter Notebook 
 def infer_model(override_args):
+    random_seed = 1
+    torch.manual_seed(random_seed) # cpu
+    torch.cuda.manual_seed(random_seed) # gpu
+    np.random.seed(random_seed) # numpy
+    random.seed(random_seed) # random and transforms
+    torch.backends.cudnn.deterministic=True # cudnn
+    def worker_init_fn(worker_id):
+        np.random.seed(random_seed + worker_id)
+    def seed_worker(worker_id):
+        worker_seed = torch.initial_seed() % 2**32
+        np.random.seed(worker_seed)
+
+
+
     default_args = argparse.Namespace(
         dataset='yelp_clean',
         data_path='./datasets/',

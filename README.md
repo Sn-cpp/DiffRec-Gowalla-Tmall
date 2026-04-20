@@ -4,7 +4,7 @@ This is a fork of YiyanXu/DiffRec repository which contains the pytorch implemen
 > 
 > Wenjie Wang, Yiyan Xu, Fuli Feng, Xinyu Lin, Xiangnan He, Tat-Seng Chua
 
-The goal of this fork is to test the behavior of __DiffRec__ (base version only) on the Gowalla and Tmall datasets, in comparsion with _LightGCN_, _SimGCL_ and _LightGCL_. The datasets is provided from the [LightGCL repository](https://github.com/HKUDS/LightGCL?tab=readme-ov-file).
+The goal of this fork is to test the behavior of __DiffRec__ (base version only) on four standard datasets: Gowalla, Movielens 1M, Yelp, Amazon Books datasets, along with our collected Steam dataset. 
 
 This repository contains adjustments for the base DiffRec only, made to work on:
 + python 3.12.12
@@ -64,7 +64,7 @@ python -u inference.py --help
 for the list of inference arguments.
 
 # Checkpoint files
-We release the .pth files of trained models in the `DiffRec.ipynb` [here](https://drive.google.com/drive/folders/1F_CGn01zzlgART0Ko2mIbsfmk-0Ru3jt?usp=sharing)
+We release the checkpoint files (.pth) of trained models [here](https://drive.google.com/drive/folders/1EdTHEF2wfCaKONbfLfpkKh4A9dmTGbyf?usp=sharing).
 
 # Citation
 
