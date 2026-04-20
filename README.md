@@ -14,7 +14,7 @@ This repository contains adjustments for the base DiffRec only, made to work on:
 
 The code has been modernized to work with newer version of Scipy by replacing ```scipy.sparse.csr_matrix.A``` (which is deprecated) with ```scipy.sparse.csr_matrix.toarray()```.
 
-Since the two datasets are implicit, all train/validation/test sparse matrices read from files have been adjusted to ```int8``` data-type for more efficient RAM usage.
+Since the five datasets are implicit type, all train/validation/test sparse matrices read from files have been adjusted to ```int8``` data-type for more efficient RAM usage.
 
 Including additional performance optimizations, code refinements, and other improvements.
 # Usage
